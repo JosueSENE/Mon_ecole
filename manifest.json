@@ -1,0 +1,21 @@
+{
+  "short_name": "SunuEcole",
+  "name": "Sunu École - Gestion Scolaire",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=192&h=192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=512&h=512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#111827",
+  "theme_color": "#10b981",
+  "display": "standalone",
+  "orientation": "portrait"
+}

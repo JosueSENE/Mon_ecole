@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunu École - Espace Enseignant</title>
+    <!-- Tailwind CSS (for modern UI) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (for beautiful icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SunuEcole">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        slate: {
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Scrollbars style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white shadow-lg sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md shadow-emerald-900/30">
+                    <span class="text-xl font-extrabold text-slate-950">SÉ</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base tracking-tight text-white flex items-center">
+                        Sunu École <span class="ml-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase">Enseignant</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Registre de Notes & Appel quotidien</p>
+                </div>
+            </div>
+            
+            <!-- User Status Badge -->
+            <div class="flex items-center space-x-3">
+                <!-- Live Database Status Badge -->
+                <div id="live-db-badge" onclick="window.checkLiveDbConnection()" class="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-950/40 rounded-lg border border-slate-800 text-[10px] text-slate-400 font-bold font-mono transition hover:bg-slate-800 cursor-pointer" title="Cliquez pour rafraîchir l'interconnexion">
+                    <span id="live-db-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="live-db-text">MySQL: Vérification...</span>
+                </div>
+
+                <div class="text-right hidden sm:block">
+                    <div id="header-username" class="text-xs font-bold text-slate-200">M. Fall (Saisies)</div>
+                    <div id="header-userclass" class="text-[9px] text-emerald-400 uppercase tracking-widest font-mono">Classe CM2-A</div>
+                </div>
+                <button onclick="window.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-950/40 hover:text-red-400 border border-slate-700 hover:border-red-900/50 rounded-lg text-xs font-semibold text-slate-300 transition duration-150 flex items-center space-x-1">
+                    <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 space-y-6">
+
+        <!-- Navigation Tabs Bar -->
+        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl flex flex-wrap gap-1.5 items-center justify-between shadow-lg">
+            <div class="flex items-center space-x-2 px-2 py-1">
+                <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-chalkboard"></i>
+                </span>
+                <div>
+                    <h3 class="text-xs font-black text-white" id="nav-teacher-title">Cahier de Classe</h3>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider" id="nav-teacher-subtitle">Enseignant titulaire</p>
+                </div>
+            </div>
+
+            <!-- Tabs Buttons -->
+            <div class="flex flex-wrap gap-1">
+                <button onclick="switchTab('ATTENDANCE')" id="tab-btn-ATTENDANCE" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition">
+                    <i class="fa-solid fa-clipboard-user"></i>
+                    <span>Faire l'Appel</span>
+                </button>
+                <button onclick="switchTab('GRADES')" id="tab-btn-GRADES" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition">
+                    <i class="fa-solid fa-user-pen"></i>
+                    <span>Saisir Notes</span>
+                </button>
+                <button onclick="switchTab('ROSTER')" id="tab-btn-ROSTER" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>Mes Élèves</span>
+                </button>
+                <button onclick="switchTab('STATS')" id="tab-btn-STATS" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Statistiques</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast Notification Container -->
+        <div id="toast-wrapper" class="fixed top-20 right-4 z-50 space-y-2 max-w-sm"></div>
+
+        <!-- ACTIVE SCREEN CONTAINER -->
+        <div id="screen-container" class="space-y-6">
+            <!-- Content loaded here dynamically -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-905 text-slate-500 py-4 text-center text-xs mt-auto">
+        <p>&copy; 2026 Sunu École • Sénégal • Tous droits réservés.</p>
+        <p class="text-[10px] text-slate-650 mt-1">Cahier Journalier de Maître Apprivoisé pour Tablettes et Ordinateurs de classe</p>
+    </footer>
+
+    <!-- SHARED DATA AND LOCAL LOGICAL SCRIPT -->
+    <script src="db_data.php"></script>
+    <script src="data.js"></script>
+    <script>
+        let currentTab = 'ATTENDANCE';
+
+        // Local reactive state
+        let activeTeacherTerm = '3e Trimestre'; 
+        let attendanceDate = '2026-06-01';
+        let enseignantGradesActiveTab = 0; // 0 = Individuelle, 1 = Collective
+        let selectedFicheStudentId = null;
+        let statsPeriodType = 'TRIMESTRIELLE'; // 'TRIMESTRIELLE' or 'ANNUELLE'
+        let statsTerm = '3e Trimestre';
+
+        // Teacher profile
+        let teacherProfile = {
+            id: 1,
+            name: "M. Fall",
+            email: "fall@ecole.sn",
+            classGrade: "CM2",
+            classDivision: "A",
+            invitationCode: "PROF-ABC123"
+        };
+
+        // Security check
+        window.addEventListener('load', () => {
+            if (window.initStorage) {
+                window.initStorage();
+            }
+
+            const sessionStr = localStorage.getItem('school_session');
+            if (!sessionStr) {
+                // Auto login as default demo falling
+                const demoUser = { 
+                    role: 'ENSEIGNANT', 
+                    name: "M. Fall", 
+                    email: "fall@ecole.sn", 
+                    detail: teacherProfile 
+                };
+                localStorage.setItem('school_session', JSON.stringify(demoUser));
+                window.showToast("ℹ️ Connexion auto de démonstration (M. Fall).", "info");
+            } else {
+                const session = JSON.parse(sessionStr);
+                if (session.role !== 'ENSEIGNANT') {
+                    window.location.href = "index.html";
+                    return;
+                }
+                teacherProfile = session.detail || teacherProfile;
+            }
+
+            // Sync visual headers
+            document.getElementById('header-username').innerText = teacherProfile.name;
+            document.getElementById('header-userclass').innerText = `Classe ${teacherProfile.classGrade}-${teacherProfile.classDivision}`;
+            document.getElementById('nav-teacher-title').innerText = `Classe ${teacherProfile.classGrade}-${teacherProfile.classDivision}`;
+            document.getElementById('nav-teacher-subtitle').innerText = `Maître titulaire : ${teacherProfile.name}`;
+
+            switchTab('ATTENDANCE');
+        });
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            window.currentTab = tabId;
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex items-center space-x-2 px-3.5 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl text-slate-400 hover:bg-slate-900 transition";
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn flex items-center space-x-2 px-3.5 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl bg-slate-950 text-emerald-400 border border-slate-800 shadow transition";
+            }
+
+            const container = document.getElementById('screen-container');
+            container.innerHTML = '';
+
+            // Handle term picker first
+            if (!activeTeacherTerm) {
+                renderTermPicker(container);
+                return;
+            }
+
+            if (tabId === 'ATTENDANCE') renderAttendance(container);
+            if (tabId === 'GRADES') renderGrades(container);
+            if (tabId === 'ROSTER') renderRoster(container);
+            if (tabId === 'STATS') renderStats(container);
+        }
+
+        // TERM SELECTION
+        function renderTermPicker(container) {
+            container.innerHTML = `
+                <div class="max-w-md mx-auto bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4 text-center my-10 animate-fade-in">
+                    <div class="w-16 h-16 bg-blue-500/10 text-blue-400 text-3xl mx-auto rounded-2xl flex items-center justify-center font-bold border border-blue-500/20 shadow">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Sélectionner un Trimestre de Travail</h4>
+                        <p class="text-xs text-slate-400">Pour saisir des notes d'évaluation ou faire l'appel d'élèves, veuillez d'abord activer une période scolaire trimestrielle.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="setTeacherActiveTerm('1er Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase tracking-wider text-xs">
+                            <span>🍂 1er Trimestre (Saisies)</span>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-500"></i>
+                        </button>
+                        <button onclick="setTeacherActiveTerm('2e Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase tracking-wider text-xs">
+                            <span>❄️ 2e Trimestre (Saisies)</span>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-500"></i>
+                        </button>
+                        <button onclick="setTeacherActiveTerm('3e Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase tracking-wider text-xs">
+                            <span>🌱 3e Trimestre (En cours)</span>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-slate-500"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setTeacherActiveTerm(term) {
+            activeTeacherTerm = term;
+            switchTab(currentTab);
+            if (term) {
+                window.showToast(`📅 Session active initialisée : ${term}`, 'info');
+            }
+        }
+
+        // ================= SCREEN 1: ATTENDANCE ROLL CALL =================
+        function renderAttendance(container) {
+            const pupils = window.db.students.filter(x => x.classGrade === teacherProfile.classGrade && x.classDivision === teacherProfile.classDivision);
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <!-- selected period banner -->
+                    <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex items-center justify-between shadow">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-slate-400">Trimestre actif :</span>
+                            <span class="text-xs font-black text-blue-400 uppercase bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20"><i class="fa-solid fa-calendar mr-1.5"></i>${activeTeacherTerm}</span>
+                        </div>
+                        <button onclick="setTeacherActiveTerm(null)" class="text-[10px] bg-slate-800 hover:bg-slate-705 font-bold px-3 py-1.5 rounded-lg text-slate-300 transition hover:scale-[1.02]">
+                            <i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Changer de trimestre
+                        </button>
+                    </div>
+
+                    <!-- Attendance Board -->
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h4 class="text-sm font-black text-white uppercase tracking-wide">Registre journalier des Présences (Appel)</h4>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Classe: ${teacherProfile.classGrade}-${teacherProfile.classDivision} • Enseignant: ${teacherProfile.name}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs font-bold text-slate-400">Date d'appel :</label>
+                                <input onchange="updateAttendanceDate(this.value)" type="date" id="att-date" class="bg-slate-950 border border-slate-800 p-2 text-xs rounded text-slate-100 uppercase font-bold" value="${attendanceDate}">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-[9px] border-b border-slate-800 select-none">
+                                    <tr>
+                                        <th class="p-3">Matricule</th>
+                                        <th class="p-3">Prénom & Nom de l'élève</th>
+                                        <th class="p-3">Présent</th>
+                                        <th class="p-3">Absent</th>
+                                        <th class="p-3">Retard</th>
+                                        <th class="p-3 text-right">Statut pour le jour</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/50">
+                                    ${pupils.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-500">Aucun élève inscrit dans votre classe actuellement.</td></tr>` : 
+                                        pupils.map(p => {
+                                            const record = window.db.attendance.find(a => a.studentId === p.id && a.date === attendanceDate);
+                                            const status = record ? record.status : "Non-marqué";
+                                            
+                                            return `
+                                                <tr class="hover:bg-slate-950/40">
+                                                    <td class="p-3 font-mono text-[11px] text-slate-500">${p.studentNumber}</td>
+                                                    <td class="p-3 font-bold text-slate-200">${p.firstName} ${p.lastName}</td>
+                                                    <td class="p-3">
+                                                        <input type="radio" name="att-${p.id}" ${status === 'Présent' ? 'checked' : ''} onclick="markPresence(${p.id}, 'Présent')" class="w-4 h-4 text-emerald-500 bg-slate-950 border-slate-805 cursor-pointer">
+                                                    </td>
+                                                    <td class="p-3">
+                                                        <input type="radio" name="att-${p.id}" ${status === 'Absent' ? 'checked' : ''} onclick="markPresence(${p.id}, 'Absent')" class="w-4 h-4 text-emerald-500 bg-slate-950 border-slate-805 cursor-pointer">
+                                                    </td>
+                                                    <td class="p-3">
+                                                        <input type="radio" name="att-${p.id}" ${status === 'Retard' ? 'checked' : ''} onclick="markPresence(${p.id}, 'Retard')" class="w-4 h-4 text-emerald-500 bg-slate-950 border-slate-805 cursor-pointer">
+                                                    </td>
+                                                    <td class="p-3 text-right">
+                                                        ${status === 'Présent' ? '<span class="px-2.5 py-0.5 text-[9px] font-bold bg-green-500/10 text-green-450 rounded border border-green-500/20">Présent</span>' : ''}
+                                                        ${status === 'Absent' ? '<span class="px-2.5 py-0.5 text-[9px] font-bold bg-red-500/10 text-red-500 rounded border border-red-500/20">Absent</span>' : ''}
+                                                        ${status === 'Retard' ? '<span class="px-2.5 py-0.5 text-[9px] font-bold bg-yellow-500/10 text-yellow-500 rounded border border-yellow-500/20">Retard</span>' : ''}
+                                                        ${status === 'Non-marqué' ? '<span class="px-2.5 py-0.5 text-[9px] font-bold bg-slate-850 text-slate-400 rounded border border-slate-800">Non marqué</span>' : ''}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAttendanceDate(val) {
+            attendanceDate = val;
+            switchTab('ATTENDANCE');
+        }
+
+        function markPresence(studentId, status) {
+            const index = window.db.attendance.findIndex(a => a.studentId === studentId && a.date === attendanceDate);
+            const refStudent = window.db.students.find(s => s.id === studentId);
+            
+            if (index !== -1) {
+                window.db.attendance[index].status = status;
+            } else {
+                const nextId = window.db.attendance.length > 0 ? Math.max(...window.db.attendance.map(a => a.id)) + 1 : 1;
+                window.db.attendance.push({
+                    id: nextId,
+                    studentId: studentId,
+                    date: attendanceDate,
+                    status: status,
+                    classGrade: teacherProfile.classGrade,
+                    classDivision: teacherProfile.classDivision
+                });
+            }
+
+            window.saveToStorage('attendance');
+            window.showToast(`✔️ ${refStudent ? refStudent.lastName : 'Élève'} marqué : ${status}`, 'success');
+            switchTab('ATTENDANCE');
+        }
+
+        // ================= SCREEN 2: SCORING BOOK (GRADES) =================
+        function renderGrades(container) {
+            const pupils = window.db.students.filter(x => x.classGrade === teacherProfile.classGrade && x.classDivision === teacherProfile.classDivision);
+            const mySubjects = window.db.subjects.filter(s => s.level === teacherProfile.classGrade);
+
+            // Default student selected for the fiche
+            if (pupils.length > 0 && selectedFicheStudentId === null) {
+                selectedFicheStudentId = pupils[0].id;
+            }
+
+            // Build a flat list of all writable evaluation columns (either standard subject or each of its sub-subjects)
+            const evaluationColumns = [];
+            mySubjects.forEach(sub => {
+                const subSubs = window.db.subSubjects.filter(ss => ss.subjectId === sub.id);
+                if (subSubs.length === 0) {
+                    evaluationColumns.push({
+                        subjectId: sub.id,
+                        subjectName: sub.name,
+                        subSubjectName: null, // Global
+                        displayName: sub.name,
+                        coefficient: sub.coefficient
+                    });
+                } else {
+                    subSubs.forEach(ss => {
+                        evaluationColumns.push({
+                            subjectId: sub.id,
+                            subjectName: sub.name,
+                            subSubjectName: ss.name,
+                            displayName: ss.name,
+                            coefficient: sub.coefficient
+                        });
+                    });
+                }
+            });
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <!-- selected period banner -->
+                    <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex items-center justify-between shadow">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-slate-400">Trimestre Saisies :</span>
+                            <span class="text-xs font-black text-blue-400 uppercase bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20"><i class="fa-solid fa-calendar mr-1.5"></i>${activeTeacherTerm}</span>
+                        </div>
+                        <button onclick="setTeacherActiveTerm(null)" class="text-[10px] bg-slate-800 hover:bg-slate-705 font-bold px-3 py-1.5 rounded-lg text-slate-300 transition hover:scale-[1.02]">
+                            <i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Changer de trimestre
+                        </button>
+                    </div>
+
+                    <!-- Toggle tabs Saisie type -->
+                    <div class="flex items-center space-x-2 border-b border-slate-800 pb-1 w-fit select-none">
+                        <button onclick="enseignantGradesActiveTab = 0; switchTab('GRADES');" class="px-4 py-2 text-xs font-black uppercase rounded-t-lg transition hover:text-slate-250 h-9 flex items-center ${enseignantGradesActiveTab === 0 ? 'bg-blue-500 text-slate-950 font-extrabold shadow' : 'text-slate-440 text-slate-400' }">
+                            <i class="fa-solid fa-user-pen mr-1.5 text-base"></i>Fiche Élève (Toutes Matières)
+                        </button>
+                        <button onclick="enseignantGradesActiveTab = 1; switchTab('GRADES');" class="px-4 py-2 text-xs font-black uppercase rounded-t-lg transition hover:text-slate-250 h-9 flex items-center ${enseignantGradesActiveTab === 1 ? 'bg-blue-500 text-slate-950 font-extrabold shadow' : 'text-slate-440 text-slate-400' }">
+                            <i class="fa-solid fa-border-all mr-1.5 text-base"></i>Grille Générale de Classe
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ${enseignantGradesActiveTab === 0 ? `
+                            <!-- Saisie par Fiche Élève FORM (Toutes les matières) -->
+                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 h-fit shadow-md lg:col-span-2">
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-800/60">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-id-card text-blue-400 mr-2 text-sm"></i>Saisie par Fiche Élève</h4>
+                                    <span class="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">1 élève • Toutes matières</span>
+                                </div>
+                                
+                                <form id="student-grades-form" onsubmit="handleStudentGradesSubmit(event)" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sélectionner l'Élève</label>
+                                            <select id="gs-student" onchange="selectedFicheStudentId = parseInt(this.value); switchTab('GRADES');" required class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg p-2.5 text-white font-bold focus:border-blue-500">
+                                                ${pupils.map(p => `
+                                                    <option value="${p.id}" ${p.id === selectedFicheStudentId ? 'selected' : ''}>${p.firstName} ${p.lastName} (${p.classGrade}-${p.classDivision})</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Date d'Évaluation</label>
+                                            <input type="date" id="gs-date" required class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg p-2.5 text-white font-bold text-center" value="2026-06-01">
+                                        </div>
+                                    </div>
+
+                                    <div class="overflow-x-auto border border-slate-850 rounded-xl bg-slate-950/60">
+                                        <table class="w-full text-xs text-left">
+                                            <thead class="bg-slate-955 text-slate-400 uppercase text-[9px] border-b border-slate-800 select-none">
+                                                <tr>
+                                                    <th class="p-3">Matière de la Classe</th>
+                                                    <th class="p-3 text-center">Coef</th>
+                                                    <th class="p-3">Composante (Sous-Matière)</th>
+                                                    <th class="p-3 text-center">Note sur 10</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-800/40">
+                                                ${mySubjects.map(sub => {
+                                                    const subSubs = window.db.subSubjects.filter(ss => ss.subjectId === sub.id);
+                                                    if (subSubs.length === 0) {
+                                                        const existing = window.db.grades.find(g => 
+                                                            g.studentId === selectedFicheStudentId && 
+                                                            g.subject === sub.name && 
+                                                            (!g.subSubject || g.subSubject === 'Évaluation Globale') && 
+                                                            g.term === activeTeacherTerm
+                                                        );
+                                                        const displayVal = existing ? existing.score : '';
+                                                        return `
+                                                            <tr class="hover:bg-slate-900/10">
+                                                                <td class="p-3 font-bold text-slate-200">
+                                                                    <span class="text-xs">${sub.name}</span>
+                                                                </td>
+                                                                <td class="p-3 text-center text-slate-400 font-mono font-bold">${sub.coefficient}</td>
+                                                                <td class="p-3 text-slate-450 italic font-semibold text-[11px]">
+                                                                    <i class="fa-solid fa-folder-open text-slate-650 mr-1 col_icon"></i> Évaluation Globale
+                                                                </td>
+                                                                <td class="p-3 text-center">
+                                                                    <input type="number" step="0.25" min="0" max="10" placeholder="${displayVal !== '' ? displayVal : '-'}" value="${displayVal}" 
+                                                                           class="w-20 bg-slate-900 border border-slate-800 text-xs rounded p-1.5 font-mono text-center font-black text-emerald-400 score-input focus:border-emerald-500"
+                                                                           data-subject-id="${sub.id}" data-subject-name="${sub.name}" data-sub-subject="" data-coefficient="${sub.coefficient}">
+                                                                </td>
+                                                            </tr>
+                                                        `;
+                                                    } else {
+                                                        return subSubs.map((ss, idx) => {
+                                                            const existing = window.db.grades.find(g => 
+                                                                g.studentId === selectedFicheStudentId && 
+                                                                g.subject === sub.name && 
+                                                                g.subSubject === ss.name && 
+                                                                g.term === activeTeacherTerm
+                                                            );
+                                                            const displayVal = existing ? existing.score : '';
+                                                            return `
+                                                                <tr class="hover:bg-slate-900/10 ${idx === 0 ? 'border-t border-slate-800/80 bg-slate-900/10' : ''}">
+                                                                    <td class="p-3">
+                                                                        ${idx === 0 ? `
+                                                                            <span class="font-bold text-slate-200 text-xs">${sub.name}</span>
+                                                                        ` : `
+                                                                            <span class="hidden md:inline text-slate-500 text-xs font-semibold pl-2">· ${sub.name}</span>
+                                                                        `}
+                                                                    </td>
+                                                                    <td class="p-3 text-center text-slate-450 font-mono font-bold">${idx === 0 ? sub.coefficient : ''}</td>
+                                                                    <td class="p-3">
+                                                                        <span class="text-[11px] font-black text-indigo-305 uppercase tracking-wide bg-indigo-500/10 border border-indigo-550/10 px-2.5 py-1 rounded">
+                                                                            <i class="fa-solid fa-folder-tree mr-1 text-[9px] text-indigo-400"></i> ${ss.name}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td class="p-3 text-center">
+                                                                        <input type="number" step="0.25" min="0" max="10" placeholder="${displayVal !== '' ? displayVal : '-'}" value="${displayVal}" 
+                                                                               class="w-20 bg-slate-900 border border-slate-800 text-xs rounded p-1.5 font-mono text-center font-black text-emerald-400 score-input focus:border-emerald-500"
+                                                                               data-subject-id="${sub.id}" data-subject-name="${sub.name}" data-sub-subject="${ss.name}" data-coefficient="${sub.coefficient}">
+                                                                    </td>
+                                                                </tr>
+                                                            `;
+                                                        }).join('');
+                                                    }
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <button type="submit" class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-slate-950 font-black text-xs uppercase rounded-lg transition shadow-md shadow-blue-900/20 flex items-center justify-center space-x-1.5">
+                                        <i class="fa-solid fa-circle-check text-sm"></i>
+                                        <span>Enregistrer les Notes de la Fiche</span>
+                                    </button>
+                                </form>
+                            </div>
+                        ` : `
+                            <!-- Saisie par Grille Générale de Classe (Spreadsheet) -->
+                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 h-fit shadow-md lg:col-span-2">
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-805">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-table-cells text-emerald-400 mr-2 text-sm"></i>Grille Générale de Classe</h4>
+                                    <span class="text-[10px] text-slate-400 font-bold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Toutes matières & Composantes incluses</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400">Entrez directement les notes des élèves ci-dessous. Le tableau inclut chaque sous-matière pour une saisie intégrale simplifiée.</p>
+                                
+                                <form id="class-grid-form" onsubmit="handleClassGridSubmit(event)" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Date Globale d'Évaluation</label>
+                                            <input type="date" id="gcg-date" required class="w-full bg-slate-950 border border-slate-800 text-xs rounded-lg p-2.5 text-white font-bold text-center" value="2026-06-01">
+                                        </div>
+                                    </div>
+
+                                    <div class="overflow-x-auto border border-slate-850 rounded-xl bg-slate-950/60 font-medium">
+                                        <table class="w-full text-xs text-left">
+                                            <thead class="bg-slate-950 text-slate-400 uppercase text-[9px] border-b border-slate-800 select-none">
+                                                <tr>
+                                                    <th class="p-3 min-w-[150px] sticky left-0 bg-slate-1000 bg-slate-950 z-10 border-r border-slate-800 shadow">Prénom & Nom de l'Élève</th>
+                                                    ${evaluationColumns.map(col => `
+                                                         <th class="p-3 text-center min-w-[145px] border-r border-slate-800/40">
+                                                             <div class="font-extrabold text-[10px] text-indigo-300 leading-tight">${col.subSubjectName ? col.subSubjectName : col.subjectName}</div>
+                                                             <div class="text-[8px] text-slate-500 font-medium mt-0.5">
+                                                                 ${col.subSubjectName ? `<span class="bg-indigo-950/40 text-indigo-400 px-1 py-0.5 rounded border border-indigo-900/30 uppercase text-[7px]">${col.subjectName.substring(0, 10)}...</span>` : '<span class="bg-emerald-950/40 text-emerald-400 px-1 py-0.5 rounded border border-emerald-900/30 uppercase text-[7px]">Général</span>'}
+                                                             </div>
+                                                             <div class="text-[8px] font-mono text-slate-500 mt-0.5">Coef ${col.coefficient} /10</div>
+                                                         </th>
+                                                    `).join('')}
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-800/40">
+                                                ${pupils.map(p => `
+                                                    <tr class="hover:bg-slate-900/15">
+                                                        <td class="p-3 font-bold text-slate-200 sticky left-0 bg-slate-900 border-r border-slate-850 z-10 shadow-md">
+                                                            <span>${p.firstName} ${p.lastName}</span>
+                                                        </td>
+                                                        ${evaluationColumns.map(col => {
+                                                            const existing = window.db.grades.find(g => 
+                                                                g.studentId === p.id && 
+                                                                g.subject === col.subjectName && 
+                                                                (col.subSubjectName ? g.subSubject === col.subSubjectName : (!g.subSubject || g.subSubject === 'Évaluation Globale')) && 
+                                                                g.term === activeTeacherTerm
+                                                            );
+                                                            const displayVal = existing ? existing.score : '';
+                                                            return `
+                                                                <td class="p-3 text-center border-r border-slate-855/20">
+                                                                    <input type="number" step="0.25" min="0" max="10" placeholder="${displayVal !== '' ? displayVal : '-'}" value="${displayVal}" 
+                                                                           class="w-16 bg-slate-950 border border-slate-800 text-xs rounded p-1 font-mono text-center font-black text-blue-400 grid-score-input focus:border-blue-500 hover:border-slate-700"
+                                                                           data-student-id="${p.id}" 
+                                                                           data-subject-id="${col.subjectId}" 
+                                                                           data-subject-name="${col.subjectName}" 
+                                                                           data-sub-subject="${col.subSubjectName || 'Évaluation Globale'}" 
+                                                                           data-coefficient="${col.coefficient}">
+                                                                </td>
+                                                            `;
+                                                        }).join('')}
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs uppercase rounded-lg transition shadow-md shadow-emerald-900/20 flex items-center justify-center space-x-1.5">
+                                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                                        <span>Publier tout le Tableau de Classe</span>
+                                    </button>
+                                </form>
+                            </div>
+                        `}
+
+                        <!-- Historic list (Right) -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md col-span-1">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-800/60">
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-clock-rotate-left mr-2 text-indigo-400"></i>Notes Récentes</h4>
+                                <span class="text-[10px] text-slate-400 font-mono font-bold uppercase">${teacherProfile.classGrade}-${teacherProfile.classDivision}</span>
+                            </div>
+                            
+                            <div class="max-h-[500px] overflow-y-auto pr-1">
+                                <table class="w-full text-xs text-left">
+                                    <thead class="bg-slate-950 text-slate-555 border-b border-slate-800 font-bold uppercase text-[8px] select-none sticky top-0">
+                                        <tr>
+                                            <th class="p-2">Élève</th>
+                                            <th class="p-2 text-center">Note</th>
+                                            <th class="p-2 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/40">
+                                        ${window.db.grades.filter(g => {
+                                            const std = window.db.students.find(s => s.id === g.studentId);
+                                            return std && std.classGrade === teacherProfile.classGrade && std.classDivision === teacherProfile.classDivision && g.term === activeTeacherTerm;
+                                        }).length === 0 ? `<tr><td colspan="3" class="p-4 text-center text-slate-500 italic">Aucune note enregistrée ce trimestre.</td></tr>` : 
+                                        window.db.grades.filter(g => {
+                                            const std = window.db.students.find(s => s.id === g.studentId);
+                                            return std && std.classGrade === teacherProfile.classGrade && std.classDivision === teacherProfile.classDivision && g.term === activeTeacherTerm;
+                                        }).map(g => {
+                                            const std = window.db.students.find(s => s.id === g.studentId);
+                                            return `
+                                                <tr class="hover:bg-slate-950/40">
+                                                    <td class="p-2 font-bold text-slate-300">
+                                                        <div class="truncate max-w-[120px]">${std ? `${std.firstName} ${std.lastName}` : 'Inconnu'}</div>
+                                                        <div class="text-[8px] text-slate-550 font-medium truncate max-w-[120px]">${g.subject} (${g.subSubject || 'Général'})</div>
+                                                    </td>
+                                                    <td class="p-2 text-center">
+                                                        <span class="font-mono font-black text-emerald-450">${g.score.toFixed(1)}</span>
+                                                        <span class="text-[8px] text-slate-500">/10</span>
+                                                    </td>
+                                                    <td class="p-2 text-right">
+                                                        <button onclick="deleteGrade(${g.id})" class="p-1 hover:bg-red-500/10 text-red-400 rounded transition" title="Supprimer">
+                                                            <i class="fa-solid fa-trash text-[10px]"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).reverse().join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleStudentGradesSubmit(event) {
+            event.preventDefault();
+            const studentId = parseInt(document.getElementById('gs-student').value);
+            const date = document.getElementById('gs-date').value;
+            const student = window.db.students.find(s => s.id === studentId);
+            if (!student) return;
+
+            let counter = 0;
+            const inputs = document.querySelectorAll('#student-grades-form .score-input');
+            inputs.forEach(scoreInput => {
+                const scoreVal = scoreInput.value.trim();
+                if (scoreVal !== '') {
+                    const score = parseFloat(scoreVal);
+                    const subjectName = scoreInput.dataset.subjectName;
+                    const coeff = parseInt(scoreInput.dataset.coefficient) || 1;
+                    const subSubject = scoreInput.dataset.subSubject || "Évaluation Globale";
+
+                    // Check if grade already exists for this student + subject + subsubject + term
+                    const existingIndex = window.db.grades.findIndex(g => 
+                        g.studentId === studentId && 
+                        g.subject === subjectName && 
+                        g.subSubject === subSubject && 
+                        g.term === activeTeacherTerm
+                    );
+
+                    if (existingIndex !== -1) {
+                        window.db.grades[existingIndex].score = score;
+                        window.db.grades[existingIndex].date = date;
+                    } else {
+                        const nextId = window.db.grades.length > 0 ? Math.max(...window.db.grades.map(g => g.id)) + 1 : 1;
+                        window.db.grades.push({
+                            id: nextId,
+                            studentId: studentId,
+                            subject: subjectName,
+                            subSubject: subSubject,
+                            score: score,
+                            maxScore: 10,
+                            coefficient: coeff,
+                            date: date,
+                            term: activeTeacherTerm
+                        });
+                    }
+                    counter++;
+                }
+            });
+
+            if (counter === 0) {
+                window.showToast("⚠️ Saisissez au moins une note sur la fiche.", "error");
+                return;
+            }
+
+            window.saveToStorage('grades');
+            window.showToast(`🎉 ${counter} note(s) enregistrées/mises à jour pour ${student.firstName} ${student.lastName} !`, "success");
+
+            // Automatic incremental focus on the next student for high efficiency workflow!
+            const select = document.getElementById('gs-student');
+            if (select && select.selectedIndex < select.options.length - 1) {
+                const nextIndex = select.selectedIndex + 1;
+                selectedFicheStudentId = parseInt(select.options[nextIndex].value);
+                const nextStudentName = select.options[nextIndex].text;
+
+                select.selectedIndex = nextIndex;
+                window.showToast(`👉 Suivant automatique : ${nextStudentName}`, "info");
+                switchTab('GRADES');
+            } else {
+                switchTab('GRADES');
+            }
+        }
+
+        function handleClassGridSubmit(event) {
+            event.preventDefault();
+            const date = document.getElementById('gcg-date').value;
+
+            let counter = 0;
+            const inputs = document.querySelectorAll('.grid-score-input');
+            inputs.forEach(input => {
+                const scoreVal = input.value.trim();
+                if (scoreVal !== '') {
+                    const score = parseFloat(scoreVal);
+                    const studentId = parseInt(input.dataset.studentId);
+                    const subjectName = input.dataset.subjectName;
+                    const subSubject = input.dataset.subSubject || "Évaluation Globale";
+                    const coeff = parseInt(input.dataset.coefficient) || 1;
+
+                    // Check if grade already exists for this student + subject + subsubject + term
+                    const existingIndex = window.db.grades.findIndex(g => 
+                        g.studentId === studentId && 
+                        g.subject === subjectName && 
+                        g.subSubject === subSubject && 
+                        g.term === activeTeacherTerm
+                    );
+
+                    if (existingIndex !== -1) {
+                        window.db.grades[existingIndex].score = score;
+                        window.db.grades[existingIndex].date = date;
+                    } else {
+                        const nextId = window.db.grades.length > 0 ? Math.max(...window.db.grades.map(g => g.id)) + 1 : 1;
+                        window.db.grades.push({
+                            id: nextId,
+                            studentId: studentId,
+                            subject: subjectName,
+                            subSubject: subSubject,
+                            score: score,
+                            maxScore: 10,
+                            coefficient: coeff,
+                            date: date,
+                            term: activeTeacherTerm
+                        });
+                    }
+                    counter++;
+                }
+            });
+
+            if (counter === 0) {
+                window.showToast("⚠️ Veuillez remplir au moins une note avant de soumettre la grille.", "error");
+                return;
+            }
+
+            window.saveToStorage('grades');
+            window.showToast(`🎉 ${counter} note(s) enregistrées/mises à jour pour la classe !`, "success");
+            switchTab('GRADES');
+        }
+
+        function deleteGrade(id) {
+            if (confirm("⚠️ Enlever cette note de devoirs ?")) {
+                window.db.grades = window.db.grades.filter(x => x.id !== id);
+                window.saveToStorage('grades');
+                window.showToast("Note retirée.", "info");
+                switchTab('GRADES');
+            }
+        }
+
+
+        // ================= SCREEN 3: ROSTER (STUDENTS LISTS) =================
+        function renderRoster(container) {
+            const pupils = window.db.students.filter(x => x.classGrade === teacherProfile.classGrade && x.classDivision === teacherProfile.classDivision);
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-lg space-y-4">
+                        <div>
+                            <h4 class="text-sm font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-graduation-cap text-emerald-400 mr-2"></i>Registre des Élèves Inscrits</h4>
+                            <p class="text-xs text-slate-500 mt-1">Élèves sous votre responsabilité pédagogique : ${teacherProfile.classGrade}-${teacherProfile.classDivision}</p>
+                        </div>
+
+                        <div class="overflow-x-auto text-left">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-slate-950 text-slate-500 text-[10px] uppercase border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-3">Matricule</th>
+                                        <th class="p-3">Identité Prénom & Nom</th>
+                                        <th class="p-3">Genre</th>
+                                        <th class="p-3">Date de Naissance</th>
+                                        <th class="p-3">GSM d'un Parent responsable</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/40">
+                                    ${pupils.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun élève trouvé.</td></tr>` : 
+                                        pupils.map(p => `
+                                            <tr class="hover:bg-slate-950/40">
+                                                <td class="p-3 font-mono text-[10px] font-black text-indigo-400">${p.studentNumber}</td>
+                                                <td class="p-3 font-extrabold text-slate-200">${p.firstName} ${p.lastName}</td>
+                                                <td class="p-3">
+                                                    ${p.gender === 'F' ? '<span class="text-rose-400"><i class="fa-solid fa-venus mr-1"></i>Féminin</span>' : '<span class="text-cyan-400"><i class="fa-solid fa-mars mr-1"></i>Masculin</span>'}
+                                                </td>
+                                                <td class="p-3 font-mono text-slate-400">${p.birthDate}</td>
+                                                <td class="p-3 font-mono text-slate-300 font-bold">${p.parentContact || 'Non affecté'}</td>
+                                            </tr>
+                                        `).join('')
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ================= SCREEN 4: CLASS LEVEL STATISTICS =================
+        function renderStats(container) {
+            const pupils = window.db.students.filter(x => x.classGrade === teacherProfile.classGrade && x.classDivision === teacherProfile.classDivision);
+            
+            // Attendance metrics
+            const classAtt = window.db.attendance.filter(a => a.classGrade === teacherProfile.classGrade && a.classDivision === teacherProfile.classDivision);
+            const presents = classAtt.filter(a => a.status === 'Présent' || a.status === 'Retard').length;
+            const attRate = classAtt.length > 0 ? (presents / classAtt.length) * 100 : 96.5;
+
+            // Compute student averages for class starting with state counters
+            let passCount = 0;
+            let excellentCount = 0;
+            let goodCount = 0;
+            let moyenCount = 0;
+            let insuffisantCount = 0;
+            
+            let bestAvg = null;
+            let worstAvg = null;
+
+            const pupilAverages = [];
+            const studentStatsList = [];
+
+            pupils.forEach(p => {
+                let avg = null;
+                if (statsPeriodType === 'TRIMESTRIELLE') {
+                    avg = window.calculateOverallAverage(p.id, statsTerm);
+                } else {
+                    // Annual average is the average of the 3 terms' overall averages
+                    const quarters = ['1er Trimestre', '2e Trimestre', '3e Trimestre'];
+                    let computedTermsAverages = [];
+                    quarters.forEach(q => {
+                        const scoreQ = window.calculateOverallAverage(p.id, q);
+                        if (scoreQ !== null) {
+                            computedTermsAverages.push(scoreQ);
+                        }
+                    });
+                    if (computedTermsAverages.length > 0) {
+                        avg = computedTermsAverages.reduce((sum, val) => sum + val, 0) / computedTermsAverages.length;
+                    }
+                }
+
+                let finalAvg = avg;
+                let isSeed = false;
+
+                if (avg !== null) {
+                    pupilAverages.push(avg);
+                    if (bestAvg === null || avg > bestAvg) bestAvg = avg;
+                    if (worstAvg === null || avg < worstAvg) worstAvg = avg;
+                    
+                    if (avg >= 5.0) passCount++;
+                    if (avg >= 8.5) excellentCount++;
+                    else if (avg >= 7.0) goodCount++;
+                    else if (avg >= 5.0) moyenCount++;
+                    else insuffisantCount++;
+                } else {
+                    // Seed defaults for demo if no grades entered
+                    const defaultAvg = p.firstName.startsWith("A") ? 8.2 : 6.5;
+                    finalAvg = defaultAvg;
+                    isSeed = true;
+                    pupilAverages.push(defaultAvg);
+                    if (bestAvg === null || defaultAvg > bestAvg) bestAvg = defaultAvg;
+                    if (worstAvg === null || defaultAvg < worstAvg) worstAvg = defaultAvg;
+                    
+                    if (defaultAvg >= 5.0) passCount++;
+                    if (defaultAvg >= 8.5) excellentCount++;
+                    else if (defaultAvg >= 7.0) goodCount++;
+                    else if (defaultAvg >= 5.0) moyenCount++;
+                    else insuffisantCount++;
+                }
+
+                studentStatsList.push({
+                    student: p,
+                    average: finalAvg,
+                    isSeed: isSeed
+                });
+            });
+
+            // Sort student list by average descending to compute rank
+            studentStatsList.sort((a, b) => b.average - a.average);
+
+            const overallSum = pupilAverages.reduce((acc, v) => acc + v, 0);
+            const classAvg = pupilAverages.length > 0 ? (overallSum / pupilAverages.length) : 7.2;
+            const passPercent = pupils.length > 0 ? (passCount / pupils.length) * 100 : 85.0;
+
+            // Subjects average
+            const subjects = window.db.subjects.filter(s => s.level === teacherProfile.classGrade);
+            const subjectStats = subjects.map(sub => {
+                let sum = 0, count = 0;
+                pupils.forEach(p => {
+                    const subGrades = window.db.grades.filter(g => {
+                        const matchStudent = g.studentId === p.id && g.subject === sub.name;
+                        if (!matchStudent) return false;
+                        if (statsPeriodType === 'TRIMESTRIELLE') {
+                            return g.term === statsTerm;
+                        }
+                        return true; // Annual (All semesters cumulative)
+                    });
+                    subGrades.forEach(g => { sum += g.score; count++; });
+                });
+                return {
+                    name: sub.name,
+                    avg: count > 0 ? (sum / count) : (sub.name.includes("Maths") ? 7.6 : sub.name.includes("Com") ? 8.2 : 7.0)
+                };
+            });
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <!-- selected period banner / filter tabs -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400">Période d'Analyse :</span>
+                            
+                            <!-- Toggle buttons -->
+                            <div class="inline-flex bg-slate-950 p-1 rounded-lg border border-slate-800">
+                                <button onclick="statsPeriodType = 'TRIMESTRIELLE'; switchTab('STATS');" 
+                                        class="px-3 py-1 text-[10px] font-black uppercase rounded-md transition-all ${statsPeriodType === 'TRIMESTRIELLE' ? 'bg-indigo-505 bg-indigo-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-slate-200'}">
+                                    <i class="fa-solid fa-calendar-days mr-1"></i>Trimestrielle
+                                </button>
+                                <button onclick="statsPeriodType = 'ANNUELLE'; switchTab('STATS');" 
+                                        class="px-3 py-1 text-[10px] font-black uppercase rounded-md transition-all ${statsPeriodType === 'ANNUELLE' ? 'bg-indigo-505 bg-indigo-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-slate-200'}">
+                                    <i class="fa-solid fa-calendar-check mr-1"></i>Annuelle (Cumulé)
+                                </button>
+                            </div>
+
+                            ${statsPeriodType === 'TRIMESTRIELLE' ? `
+                                <!-- Short term selector drop -->
+                                <select onchange="statsTerm = this.value; switchTab('STATS');" 
+                                        class="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2.5 py-1 text-slate-300 font-bold focus:border-indigo-500">
+                                    <option value="1er Trimestre" ${statsTerm === '1er Trimestre' ? 'selected' : ''}>1er Trimestre</option>
+                                    <option value="2e Trimestre" ${statsTerm === '2e Trimestre' ? 'selected' : ''}>2e Trimestre</option>
+                                    <option value="3e Trimestre" ${statsTerm === '3e Trimestre' ? 'selected' : ''}>3e Trimestre</option>
+                                </select>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-slate-400">Période actuelle :</span>
+                            <span class="text-xs font-black text-emerald-400 uppercase bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                                <i class="fa-solid fa-shield mr-1.5"></i>${statsPeriodType === 'TRIMESTRIELLE' ? statsTerm : 'Consolidé Annuel'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards row -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Moyenne Générale Classe</p>
+                                <p class="text-2xl font-black text-white mt-1">${classAvg.toFixed(2)}/10</p>
+                            </div>
+                            <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-graduation-cap"></i></div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Taux de Réussite (Moy ≥ 5)</p>
+                                <p class="text-2xl font-black text-indigo-400 mt-1">${passPercent.toFixed(1)}%</p>
+                            </div>
+                            <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-user-check"></i></div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Meilleure Moyenne</p>
+                                <p class="text-2xl font-black text-amber-500 mt-1">${(bestAvg || 0).toFixed(2)}/10</p>
+                            </div>
+                            <div class="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-trophy"></i></div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Taux d'Assiduité</p>
+                                <p class="text-2xl font-black text-rose-550 mt-1">${attRate.toFixed(1)}%</p>
+                            </div>
+                            <div class="w-10 h-10 bg-rose-500/10 text-rose-500 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-clipboard-user"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts container grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Pie/Donut Chart for Grade Categories -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md col-span-1">
+                            <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center">
+                                <i class="fa-solid fa-chart-pie text-cyan-400 mr-2"></i> Répartition des Niveaux de Notes
+                            </h4>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Ségrégation des moyennes d'élèves.</p>
+                            
+                            <div class="flex flex-col items-center justify-center py-4 bg-slate-950 rounded-xl border border-slate-850">
+                                <div class="relative w-32 h-32">
+                                    <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                                        <!-- Outer Grey Track -->
+                                        <circle cx="18" cy="18" r="15.915" fill="none" stroke="#1e293b" stroke-width="4.2"/>
+                                        
+                                        ${(() => {
+                                            const total = pupilAverages.length || 1;
+                                            const pExc = (excellentCount / total) * 100;
+                                            const pGood = (goodCount / total) * 100;
+                                            const pMoy = (moyenCount / total) * 100;
+                                            const pIns = (insuffisantCount / total) * 100;
+                                            
+                                            let currentOffset = 0;
+                                            const slices = [
+                                                { pct: pExc, color: '#10b981' }, // emerald-500
+                                                { pct: pGood, color: '#6366f1' }, // indigo-500
+                                                { pct: pMoy, color: '#eab308' }, // yellow-500
+                                                { pct: pIns, color: '#ef4444' }  // red-500
+                                            ];
+
+                                            return slices.map(s => {
+                                                if (s.pct === 0) return '';
+                                                const strokeDash = `${s.pct} ${100 - s.pct}`;
+                                                const strokeOffset = 100 - currentOffset;
+                                                currentOffset += s.pct;
+                                                return `
+                                                    <circle cx="18" cy="18" r="15.915" fill="none" class="transition-all duration-700"
+                                                            stroke="${s.color}" stroke-width="4.2" 
+                                                            stroke-dasharray="${strokeDash}" stroke-dashoffset="${strokeOffset}"/>
+                                                `;
+                                            }).join('');
+                                        })()}
+                                    </svg>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span class="text-xl font-black text-white leading-none">${pupils.length}</span>
+                                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Élèves</span>
+                                    </div>
+                                </div>
+
+                                <!-- Donut Legend -->
+                                <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 mt-4 text-[9px] w-full px-2">
+                                    <div class="flex items-center space-x-1.5 truncate">
+                                        <span class="w-2 h-2 bg-emerald-50 rounded-full flex-shrink-0"></span>
+                                        <span class="text-slate-400 font-bold truncate">Exc (≥8.5) : <b class="text-slate-200">${excellentCount}</b></span>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5 truncate">
+                                        <span class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"></span>
+                                        <span class="text-slate-400 font-bold truncate">Bien (≥7.0) : <b class="text-slate-200">${goodCount}</b></span>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5 truncate">
+                                        <span class="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></span>
+                                        <span class="text-slate-400 font-bold truncate">Moy (≥5.0) : <b class="text-slate-200">${moyenCount}</b></span>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5 truncate">
+                                        <span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                                        <span class="text-slate-400 font-bold truncate">Insuf (<5.0) : <b class="text-slate-200">${insuffisantCount}</b></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance par Matière -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md lg:col-span-2">
+                            <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center">
+                                <i class="fa-solid fa-rectangle-list text-emerald-400 mr-2"></i> Performance par Matière
+                            </h4>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Moyenne générale calculée par sujet trimestriel.</p>
+                            
+                            <div class="space-y-3 pt-1">
+                                ${subjectStats.map(ss => {
+                                    const percent = (ss.avg / 10) * 100;
+                                    const colorClass = ss.avg >= 5 ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-rose-500';
+                                    return `
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-xs">
+                                                <span class="font-bold text-slate-200">${ss.name}</span>
+                                                <span class="font-bold font-mono text-slate-350">${ss.avg.toFixed(2)}/10</span>
+                                            </div>
+                                            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-850 flex items-center">
+                                                <div style="width: ${percent}%" class="h-full rounded-full transition-all duration-500 ${colorClass}"></div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Student Rankings Detailed Table (Tableau de Classement) -->
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-3 gap-2">
+                            <div>
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-list-numeric text-amber-500 mr-2"></i> Tableau du Classement d'Élèves
+                                </h4>
+                                <p class="text-[10px] text-slate-400">Rangs et moyennes ordonnés de manière décroissante pour la période sélectionnée.</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] text-slate-500 bg-slate-950 px-2.5 py-1 rounded border border-slate-850 font-bold font-mono">${pupils.length} Élèves classés</span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-850 rounded-xl bg-slate-950/40">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-[9px] border-b border-slate-800 select-none">
+                                    <tr>
+                                        <th class="p-3 text-center w-16">Rang</th>
+                                        <th class="p-3">Nom Prénom de l'Élève</th>
+                                        <th class="p-3 text-center">Moyenne Générale</th>
+                                        <th class="p-3 text-center">Appréciation / Mention</th>
+                                        <th class="p-3 text-center">Statut de Validation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${studentStatsList.map((entry, index) => {
+                                        const rank = index + 1;
+                                        const p = entry.student;
+                                        const avgValue = entry.average;
+                                        
+                                        // Rank visual styling
+                                        let rankBadge = '';
+                                        if (rank === 1) {
+                                            rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-yellow-400 font-black border border-amber-500/30 text-[11px]" title="Major de promotion !">🥇 1<sup>er</sup></span>`;
+                                        } else if (rank === 2) {
+                                            rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-400/20 text-slate-300 font-black border border-slate-400/30 text-[11px]" title="Dauphin de promotion">🥈 2<sup>e</sup></span>`;
+                                        } else if (rank === 3) {
+                                            rankBadge = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-700/20 text-amber-600 font-black border border-amber-700/30 text-[11px]" title="Troisième de promotion">🥉 3<sup>e</sup></span>`;
+                                        } else {
+                                            rankBadge = `<span class="text-slate-400 font-extrabold text-[10px]">${rank}<sup>e</sup></span>`;
+                                        }
+
+                                        // Average formatting
+                                        let avgColor = 'text-rose-500';
+                                        let statusBadge = '';
+                                        let appraisal = '';
+
+                                        if (avgValue >= 8.5) {
+                                            avgColor = 'text-emerald-400 font-black';
+                                            appraisal = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">Excellent</span>';
+                                            statusBadge = '<span class="text-xs text-emerald-400 font-bold flex items-center justify-center"><i class="fa-solid fa-circle-check mr-1.5 text-[9px]"></i>Admis</span>';
+                                        } else if (avgValue >= 7.0) {
+                                            avgColor = 'text-indigo-400 font-bold';
+                                            appraisal = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">Bien</span>';
+                                            statusBadge = '<span class="text-xs text-indigo-400 font-bold flex items-center justify-center"><i class="fa-solid fa-circle-check mr-1.5 text-[9px]"></i>Admis</span>';
+                                        } else if (avgValue >= 5.0) {
+                                            avgColor = 'text-yellow-400 font-bold';
+                                            appraisal = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 uppercase tracking-widest">Passable</span>';
+                                            statusBadge = '<span class="text-xs text-yellow-400 font-bold flex items-center justify-center"><i class="fa-solid fa-circle-check mr-1.5 text-[9px]"></i>Admis</span>';
+                                        } else {
+                                            avgColor = 'text-red-500 font-bold';
+                                            appraisal = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-red-500/10 text-red-500 border border-red-500/20 uppercase tracking-widest">Insuffisant</span>';
+                                            statusBadge = '<span class="text-xs text-red-500 font-bold flex items-center justify-center"><i class="fa-solid fa-circle-exclamation mr-1.5 text-[9px]"></i>Refusé</span>';
+                                        }
+
+                                        return `
+                                            <tr class="hover:bg-slate-900/40 border-b border-slate-900 transition-colors">
+                                                <td class="p-3 text-center">${rankBadge}</td>
+                                                <td class="p-3 font-semibold text-slate-200">
+                                                    <div class="flex items-center space-x-2">
+                                                        <span class="w-1.5 h-1.5 rounded-full ${p.gender === 'F' ? 'bg-pink-500' : 'bg-sky-500'}"></span>
+                                                        <span>${p.firstName} ${p.lastName}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="p-3 text-center font-mono text-xs ${avgColor}">${avgValue.toFixed(2)} / 10</td>
+                                                <td class="p-3 text-center">${appraisal}</td>
+                                                <td class="p-3 text-center">${statusBadge}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+    </script>
+</body>
+</html>

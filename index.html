@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunu École - Connexion</title>
+    <!-- Tailwind CSS (for modern UI) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (for beautiful icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SunuEcole">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        slate: {
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Beautiful custom scrollbar and animations styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white shadow-lg sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md shadow-emerald-900/30">
+                    <span class="text-xl font-extrabold text-slate-950">SÉ</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base tracking-tight text-white flex items-center">
+                        Sunu École <span class="ml-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase">Web</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400">Suite Moderne de Gestion d'Établissement</p>
+                </div>
+            </div>
+            
+            <div id="quick-redirect-badge" class="hidden flex items-center space-x-2">
+                <a id="redirect-btn" href="#" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black text-slate-950 transition flex items-center space-x-1">
+                    <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
+                    <span>Accéder à ma session</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 flex flex-col justify-center items-center">
+        
+        <!-- Toast Notification Container -->
+        <div id="toast-wrapper" class="fixed top-20 right-4 z-50 space-y-2 max-w-sm"></div>
+
+        <!-- ======================= LOGIN SCREEN ======================= -->
+        <section id="login-screen" class="w-full max-w-md my-6">
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-2xl space-y-6">
+                <div class="text-center space-y-2">
+                    <h2 class="text-2xl font-black tracking-tight text-white">Connexion Scolaire</h2>
+                    <p class="text-xs text-slate-400 px-4">Accéderez directement à votre espace HTML dédié en sélectionnant votre rôle.</p>
+                </div>
+
+                <!-- Live MySQL Database Status Widget -->
+                <div id="db-status-bar" class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 flex flex-col space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-2 font-sans">
+                            <span class="relative flex h-2 w-2">
+                                <span id="db-ping-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span id="db-ping-dot" class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            <span id="db-status-label" class="font-bold text-slate-400">Vérification de la base MySQL...</span>
+                        </div>
+                        <button type="button" onclick="checkDatabaseConnection()" class="text-[9px] hover:text-emerald-400 text-slate-400 transition uppercase font-extrabold flex items-center space-x-1 font-sans">
+                            <i class="fa-solid fa-arrows-rotate text-[8px]"></i>
+                            <span>Vérifier</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Collapsible Diagnostic Console -->
+                    <div id="db-diagnostic-box" class="hidden text-[10px] bg-slate-950 p-2.5 rounded-lg border border-slate-900 font-mono text-slate-400 space-y-2 select-text">
+                        <div class="flex justify-between items-center pb-1 border-b border-slate-900 text-slate-500 font-bold uppercase tracking-wider text-[8px]">
+                            <span>Rapport Diagnostic MySQL</span>
+                            <span id="db-conn-env" class="text-amber-500">?</span>
+                        </div>
+                        <div class="space-y-1">
+                            <p id="diag-url" class="truncate"><span class="text-slate-600">Adresse URL :</span> <span class="text-slate-300"></span></p>
+                            <p id="diag-state"><span class="text-slate-600">Connexion :</span> <span class="text-slate-300"></span></p>
+                            <p id="diag-db"><span class="text-slate-600">Base active :</span> <span class="text-slate-300"></span></p>
+                            <div id="diag-accounts-section" class="pt-1.5 hidden border-t border-slate-900/60">
+                                <p class="text-slate-500 font-bold mb-1 text-[8px] uppercase tracking-wider">Identifiants en base (SCHOOL) :</p>
+                                <ul id="diag-accounts-list" class="space-y-1 text-slate-300 list-disc list-inside"></ul>
+                                <!-- Upgrade security CTA -->
+                                <div id="diag-security-upgrade-container" class="pt-2 mt-2 border-t border-slate-900 border-dashed hidden text-center">
+                                    <button type="button" id="btn-hash-upgrade" onclick="upgradeToHighSecurityHashes()" class="w-full text-center bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-400 font-extrabold uppercase py-1.5 px-2 rounded-lg border border-emerald-500/30 text-[9px] transition-all flex items-center justify-center space-x-1.5">
+                                        <i class="fa-solid fa-shield-halved text-xs"></i>
+                                        <span>Haute Sécurité : Hacher en Bcrypt</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="diag-solution" class="text-[9px] text-slate-400 italic font-sans leading-relaxed pt-1.5 border-t border-slate-900 border-dashed">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Tabs -->
+                <div class="grid grid-cols-4 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                    <button onclick="selectLoginRole('DIRECTEUR')" id="tab-DIRECTEUR" class="role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 text-slate-400 active bg-emerald-500 text-slate-950">
+                        <i class="fa-solid fa-user-gear text-base"></i>
+                        <span>Dir.</span>
+                    </button>
+                    <button onclick="selectLoginRole('SECRETAIRE')" id="tab-SECRETAIRE" class="role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 text-slate-400">
+                        <i class="fa-solid fa-user-shield text-base"></i>
+                        <span>Secr.</span>
+                    </button>
+                    <button onclick="selectLoginRole('ENSEIGNANT')" id="tab-ENSEIGNANT" class="role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 text-slate-400">
+                        <i class="fa-solid fa-chalkboard-user text-base"></i>
+                        <span>Prof.</span>
+                    </button>
+                    <button onclick="selectLoginRole('PARENT_ELEVE')" id="tab-PARENT_ELEVE" class="role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 text-slate-400">
+                        <i class="fa-solid fa-user-graduate text-base"></i>
+                        <span>Élève</span>
+                    </button>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <!-- Alert Message -->
+                <div id="login-error-alert" class="hidden px-3 py-2.5 bg-red-950/50 border border-red-900/50 text-red-400 text-xs rounded-lg flex items-start space-x-2">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <span id="login-error-text">Message d'erreur</span>
+                </div>
+
+                <!-- Login Fields -->
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Identifiant / Adresse Email</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                <i class="fa-solid fa-envelope text-xs"></i>
+                            </span>
+                            <input type="text" id="login-email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition" placeholder="directeur@sunuecole.sn">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label id="password-label" class="block text-xs font-bold uppercase tracking-wider text-slate-300">Code PIN ou d'accès</label>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                <i class="fa-solid fa-key text-xs"></i>
+                            </span>
+                            <input type="password" id="login-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition" placeholder="••••">
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300">
+                                <i id="password-toggle-icon" class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-slate-950 font-black text-sm uppercase rounded-xl transition shadow-lg shadow-emerald-950/20 flex items-center justify-center space-x-2">
+                        <span>Se connecter à l'Espace</span>
+                        <i class="fa-solid fa-arrow-right-long text-xs"></i>
+                    </button>
+                </form>
+
+                <!-- Troubleshooting section -->
+                <div class="pt-4 border-t border-slate-800/80 flex justify-between items-center text-[10px]">
+                    <span class="text-slate-500 font-medium">Mot de passe modifié ou souci d'état ?</span>
+                    <button type="button" onclick="window.clearAppCache()" class="text-slate-400 hover:text-emerald-400 font-bold transition flex items-center space-x-1 uppercase tracking-wider">
+                        <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
+                        <span>Vider le Cache & Nettoyer</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 text-slate-500 py-4 text-center text-xs mt-auto">
+        <p>&copy; 2026 Sunu École • Sénégal • Tous droits réservés.</p>
+        <p class="text-[10px] text-slate-600 mt-1 mr-4 ml-4">Conçu en Version Pages HTML Autonomes compatibles pour Ordinateur, XAMPP et iPhone (Safari - Ajouter sur l'écran d'accueil)</p>
+    </footer>
+
+    <!-- SHARED DATA AND ROUTING INTERACTIVE CODE -->
+    <script src="db_data.php"></script>
+    <script src="data.js"></script>
+    <script>
+        // Store selected role
+        let currentRole = 'DIRECTEUR';
+
+        function selectLoginRole(role) {
+            currentRole = role;
+            
+            document.querySelectorAll('.role-tab').forEach(tab => {
+                tab.className = "role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 text-slate-400";
+            });
+            const activeTab = document.getElementById(`tab-${role}`);
+            if (activeTab) {
+                activeTab.className = "role-tab py-3 rounded-lg text-[10px] font-bold uppercase transition flex flex-col items-center justify-center space-y-1 active bg-emerald-500 text-slate-950";
+            }
+
+            const emailInput = document.getElementById('login-email');
+            const passLabel = document.getElementById('password-label');
+            const passInput = document.getElementById('login-password');
+
+            if (!emailInput || !passInput) return;
+
+            if (role === 'DIRECTEUR') {
+                emailInput.value = '';
+                emailInput.placeholder = "directeur@sunuecole.sn";
+                passLabel.innerText = "Mot de passe";
+                passInput.placeholder = "••••";
+            } else if (role === 'SECRETAIRE') {
+                emailInput.value = '';
+                emailInput.placeholder = "secretaire@sunuecole.sn";
+                passLabel.innerText = "Mot de passe";
+                passInput.placeholder = "••••";
+            } else if (role === 'ENSEIGNANT') {
+                emailInput.value = '';
+                emailInput.placeholder = "fall@ecole.sn";
+                passLabel.innerText = "Code Prof d'accès";
+                passInput.placeholder = "••••";
+            } else if (role === 'PARENT_ELEVE') {
+                emailInput.value = '';
+                emailInput.placeholder = "Identifiant ou matricule";
+                passLabel.innerText = "Matricule d'élève";
+                passInput.placeholder = "Ex: SN-2026-001";
+            }
+
+            const errBox = document.getElementById('login-error-alert');
+            if (errBox) errBox.classList.add('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('login-password');
+            const icon = document.getElementById('password-toggle-icon');
+            if (!passInput || !icon) return;
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash text-xs';
+            } else {
+                passInput.type = 'password';
+                icon.className = 'fa-solid fa-eye text-xs';
+            }
+        }
+
+        // Handle Connection Redirections via API
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <i class="fa-solid fa-spinner fa-spin text-xs"></i>
+                <span>Vérification...</span>
+            `;
+
+            fetch('api.php?action=login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    role: currentRole,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => {
+                        try {
+                            const parsed = JSON.parse(text);
+                            throw new Error(parsed.message || "Erreur serveur : " + res.status);
+                        } catch(e) {
+                            throw new Error("Erreur de connexion (" + res.status + "). Détails : " + (text.substring(0, 150) || "Sans réponse"));
+                        }
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    const u = data.user;
+                    let redirectUrl = "";
+                    let sessionObject = null;
+
+                    if (currentRole === 'DIRECTEUR') {
+                        redirectUrl = "directeur.html";
+                        sessionObject = { role: 'DIRECTEUR', name: u.name, email: u.email };
+                    } else if (currentRole === 'SECRETAIRE') {
+                        redirectUrl = "secretaire.html";
+                        sessionObject = { role: 'SECRETAIRE', name: u.name, email: u.email };
+                    } else if (currentRole === 'ENSEIGNANT') {
+                        redirectUrl = "enseignant.html";
+                        sessionObject = { role: 'ENSEIGNANT', name: u.name, email: u.email, detail: u.detail };
+                    } else if (currentRole === 'PARENT_ELEVE') {
+                        redirectUrl = "eleve.html";
+                        sessionObject = { role: 'PARENT_ELEVE', name: u.name, student: u.student };
+                    }
+
+                    // Save session in localStorage
+                    localStorage.setItem('school_session', JSON.stringify(sessionObject));
+                    
+                    if (window.initStorage) {
+                        window.initStorage();
+                    }
+
+                    window.showToast(`✅ Bienvenue ${u.name} ! Redirection en cours...`, 'success');
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 800);
+                } else {
+                    throw new Error(data.message || "Identifiants ou rôle incorrect.");
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
+                const errorBox = document.getElementById('login-error-alert');
+                const errorText = document.getElementById('login-error-text');
+                if (errorBox && errorText) {
+                    errorText.innerText = "❌ Connexion refusée : " + err.message;
+                    errorBox.classList.remove('hidden');
+                }
+                window.showToast("❌ Connexion échouée", "error");
+            });
+        });
+
+        window.clearAppCache = function() {
+            if (confirm("Voulez-vous vraiment vider le cache et réinitialiser l'application ?\n\nCela résoudra les conflits de session et chargera en temps réel votre nouveau mot de passe directement depuis la base MySQL.")) {
+                // 1. Clear session and offline state keys
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('school_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                localStorage.removeItem('school_session');
+
+                // 2. Unregister potential Service Workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        for (let r of registrations) {
+                            r.unregister();
+                        }
+                    });
+                }
+
+                // 3. Delete browser caches
+                if ('caches' in window) {
+                    caches.keys().then(keys => {
+                        for (let key of keys) {
+                            caches.delete(key);
+                        }
+                    });
+                }
+
+                if (window.showToast) {
+                    window.showToast("⚡ Cache nettoyé ! Rechargement en cours...", "success");
+                }
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 1000);
+            }
+        };
+
+        window.checkDatabaseConnection = function() {
+            const pulse = document.getElementById('db-ping-pulse');
+            const dot = document.getElementById('db-ping-dot');
+            const label = document.getElementById('db-status-label');
+            const box = document.getElementById('db-diagnostic-box');
+            
+            const diagUrl = document.querySelector('#diag-url span:nth-child(2)');
+            const diagState = document.querySelector('#diag-state span:nth-child(2)');
+            const diagDb = document.querySelector('#diag-db span:nth-child(2)');
+            const accountsSec = document.getElementById('diag-accounts-section');
+            const accountsList = document.getElementById('diag-accounts-list');
+            const solution = document.getElementById('diag-solution');
+            const envBadge = document.getElementById('db-conn-env');
+
+            if (!pulse || !dot || !label || !box) return;
+
+            // Reset UI with amber warning ping
+            pulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+            dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+            label.innerText = "Vérification MySQL-XAMPP...";
+            label.className = "font-bold text-slate-400 font-sans";
+
+            const isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+            envBadge.innerText = isLocal ? "Local (XAMPP)" : "Cloud Preview";
+            envBadge.className = isLocal ? "text-emerald-400 font-bold" : "text-amber-500 font-bold animate-pulse";
+            diagUrl.innerText = window.location.href;
+
+            fetch('api.php?action=db_status')
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            try {
+                                const parsed = JSON.parse(text);
+                                throw new Error(parsed.message || "Erreur de connexion (" + res.status + ")");
+                            } catch(e) {
+                                throw new Error(text.substring(0, 150) || "Impossible de joindre api.php");
+                            }
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.connected) {
+                        pulse.className = "absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-0";
+                        dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                        label.innerText = "MySQL Connecté (" + (data.database || "SCHOOL") + ") ✔";
+                        label.className = "font-black text-emerald-400 font-sans";
+                        
+                        diagState.innerText = "Opérationnel (Base de données accessible) ✔";
+                        diagState.className = "text-emerald-400 font-bold";
+                        diagDb.innerText = data.database || "SCHOOL";
+
+                        // Afficher le bouton de mise à niveau de sécurité si un mot de passe est brut
+                        const upgradeContainer = document.getElementById('diag-security-upgrade-container');
+                        if (upgradeContainer && data.staff) {
+                            const hasRaw = data.staff.some(u => u.pass_len < 20);
+                            if (hasRaw) {
+                                upgradeContainer.classList.remove('hidden');
+                            } else {
+                                upgradeContainer.classList.add('hidden');
+                            }
+                        }
+
+                        // Populate accounts list
+                        accountsSec.classList.remove('hidden');
+                        accountsList.innerHTML = '';
+                        if (data.staff && data.staff.length > 0) {
+                            data.staff.forEach(u => {
+                                const li = document.createElement('li');
+                                let formatInfo = "";
+                                if (u.pass_len === 4 || u.pass_len === 6) {
+                                    formatInfo = `<span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1 rounded text-[8px] font-mono">PIN Brut (${u.pass_len} car.)</span>`;
+                                } else if (u.pass_len === 32) {
+                                    formatInfo = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 rounded text-[8px] font-mono">Hachage MD5 (32)</span>`;
+                                } else if (u.pass_len === 60) {
+                                    formatInfo = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1 rounded text-[8px] font-mono">Bcrypt/password_verify (60)</span>`;
+                                } else if (u.pass_len >= 40) {
+                                    formatInfo = `<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1 rounded text-[8px] font-mono">SHA/MySQL-Hash (${u.pass_len})</span>`;
+                                } else {
+                                    formatInfo = `<span class="bg-slate-850 text-slate-400 border border-slate-700/50 px-1 rounded text-[8px] font-mono">Brut/Hash: ${u.pass_len} car.</span>`;
+                                }
+
+                                li.className = "text-[10px] py-1 flex justify-between items-center bg-slate-900 border border-slate-800/60 rounded px-2 mt-1";
+                                li.innerHTML = `
+                                    <span class="text-slate-300 font-bold truncate">${u.email} <span class="text-slate-500 font-medium">[${u.role}]</span></span>
+                                    ${formatInfo}
+                                `;
+                                accountsList.appendChild(li);
+                            });
+                        } else {
+                            accountsList.innerHTML = `<li class="text-red-400 text-[10px] italic">Aucun directeur ou secrétaire configuré dans "staff_users". Elle est vide !</li>`;
+                        }
+
+                        solution.className = "text-[9px] text-slate-500 italic font-sans leading-relaxed pt-2 border-t border-slate-900 border-dashed";
+                        solution.innerHTML = "💡 <b>Tout est connecté !</b> Si vous n'arrivez pas à vous connecter, vérifiez que le mot de passe correspond au format affiché ci-dessus (brut, PIN, MD5 ou SHA).";
+                        
+                        // Hide diagnostic console after 3 seconds on success to keep UI pristine
+                        setTimeout(() => {
+                            if (label.innerText.includes("Connecté") && !box.classList.contains('hidden')) {
+                                box.classList.add('hidden');
+                            }
+                        }, 4000);
+                    } else {
+                        throw new Error(data.message || "Impossible de se connecter à la base de données.");
+                    }
+                })
+                .catch(err => {
+                    pulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75";
+                    dot.className = "relative inline-flex rounded-full h-2 w-2 bg-red-500";
+                    label.innerText = "MySQL Non Connecté ❌";
+                    label.className = "font-extrabold text-red-400 font-sans";
+                    
+                    diagState.innerText = "Échec de connexion MySQL (SCHOOL) ✖";
+                    diagState.className = "text-red-400 font-bold";
+                    diagDb.innerText = "Indéterminée";
+                    accountsSec.classList.add('hidden');
+                    box.classList.remove('hidden');
+
+                    let guide = "";
+                    if (!isLocal) {
+                        guide = `⚡ <b>Diagnostic : Vous naviguez sur l'URL de prévisualisation Google AI Studio.</b><br>
+                                 Le serveur distant sur Google Cloud ne peut pas atteindre votre base MySQL locale installée sur votre XAMPP.<br>
+                                 <b>🔧 Option 1 (PHP/XAMPP) :</b><br>
+                                 1. Copiez l'intégralité de ce dossier dans <code>C:\\xampp\\htdocs\\sunu-ecole\\</code>.<br>
+                                 2. Vérifiez que <b>Apache</b> et <b>MySQL</b> sont lancés dans votre <b>XAMPP Control Panel</b>.<br>
+                                 3. Ouvrez votre navigateur internet local à l'adresse :<br>
+                                 <a href="http://localhost/sunu-ecole/" target="_blank" class="text-cyan-400 underline font-mono font-bold">http://localhost/sunu-ecole/</a><br>
+                                 <br>
+                                 <b>🐍 Option 2 (Python Flask - Sans XAMPP, Sans config !) :</b><br>
+                                 Dans le dossier de votre projet, ouvrez votre terminal local et tapez :<br>
+                                 <code class="text-yellow-300">pip install Flask</code> puis <code class="text-yellow-300">python app.py</code><br>
+                                 Ouvrez ensuite : <a href="http://127.0.0.1:5000" target="_blank" class="text-pink-400 underline font-mono font-bold">http://127.0.0.1:5000</a> (la base SQLite <code>school.db</code> est générée et peuplée automatiquement !)`;
+                    } else {
+                        guide = `⚡ <b>Diagnostic : Base MySQL ou serveur local injoignable sous XAMPP.</b><br>
+                                 Erreur PDO : <code class="text-red-300 bg-red-950/40 px-1 rounded">${err.message}</code><br>
+                                 <b>🔧 Comment résoudre (PHP/XAMPP) :</b><br>
+                                 1. Lancez <b>XAMPP</b>, puis cliquez sur <b>Start</b> pour <b>Apache</b> et <b>MySQL</b>.<br>
+                                 2. Ouvrez <a href="http://localhost/phpmyadmin/" target="_blank" class="text-emerald-400 underline">phpMyAdmin</a> et vérifiez qu'une base de données nommée <code>SCHOOL</code> existe.<br>
+                                 3. Si la base est manquante, créez-la et importez le fichier <code>database.sql</code> (situé à la racine de votre dossier).<br>
+                                 <br>
+                                 <b>🐍 Option 2 alternative (Python Flask - Sans XAMPP !) :</b><br>
+                                 Si vous préférez éviter MySQL et XAMPP, vous pouvez utiliser notre serveur Flask avec SQLite fourni :<br>
+                                 1. Ouvrez votre terminal dans le dossier et tapez : <code class="text-yellow-300">pip install Flask</code><br>
+                                 2. Lancez le serveur : <code class="text-yellow-300">python app.py</code><br>
+                                 3. Ouvrez : <a href="http://127.0.0.1:5000" target="_blank" class="text-pink-400 underline font-mono font-bold">http://127.0.0.1:5000</a>`;
+                    }
+                    solution.className = "text-[10px] text-slate-300 bg-red-950/20 border border-red-900/30 p-2 rounded-lg leading-relaxed mt-2 font-sans";
+                    solution.innerHTML = guide;
+                });
+        };
+
+        window.upgradeToHighSecurityHashes = function() {
+            const btn = document.getElementById('btn-hash-upgrade');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Sécurisation en cours...</span>`;
+            }
+            fetch('api.php?action=secure_hashes')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        if (window.showToast) {
+                            window.showToast("🛡️ " + data.message, "success");
+                        }
+                        setTimeout(() => {
+                            window.checkDatabaseConnection();
+                        }, 1200);
+                    } else {
+                        throw new Error(data.message || "Erreur de mise à niveau de sécurité.");
+                    }
+                })
+                .catch(err => {
+                    if (window.showToast) {
+                        window.showToast("✖ Erreur : " + err.message, "error");
+                    }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs"></i> <span>Réessayer</span>`;
+                    }
+                });
+        };
+
+        // Click status bar to toggle detail viewing
+        document.getElementById('db-status-bar').addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            const box = document.getElementById('db-diagnostic-box');
+            if (box) box.classList.toggle('hidden');
+        });
+
+        // Check if there is already an active session to offer direct access
+        window.addEventListener('load', () => {
+            if (window.initStorage) {
+                window.initStorage();
+            }
+
+            // Perform instant database check
+            setTimeout(() => {
+                if (window.checkDatabaseConnection) {
+                    window.checkDatabaseConnection();
+                }
+            }, 300);
+
+            // Deep link handling
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            const code = urlParams.get('code');
+            const email = urlParams.get('email');
+
+            if (role) {
+                selectLoginRole(role);
+                if (email) document.getElementById('login-email').value = email;
+                if (code) document.getElementById('login-password').value = code;
+                if (email && code) {
+                    window.showToast("⚡ Code d'accès invitation détecté ! Connexion vélomoteur...", "info");
+                    setTimeout(() => {
+                        const form = document.getElementById('login-form');
+                        if (form) form.dispatchEvent(new Event('submit'));
+                    }, 500);
+                }
+            } else {
+                // Offer quick reconnect
+                const sessionStr = localStorage.getItem('school_session');
+                if (sessionStr) {
+                    try {
+                        const sessionObj = JSON.parse(sessionStr);
+                        if (sessionObj && sessionObj.role) {
+                            const badge = document.getElementById('quick-redirect-badge');
+                            const btn = document.getElementById('redirect-btn');
+                            
+                            let target = "directeur.html";
+                            if (sessionObj.role === 'SECRETAIRE') target = "secretaire.html";
+                            if (sessionObj.role === 'ENSEIGNANT') target = "enseignant.html";
+                            if (sessionObj.role === 'PARENT_ELEVE') target = "eleve.html";
+
+                            btn.href = target;
+                            btn.innerHTML = `<i class="fa-solid fa-right-to-bracket text-[11px]"></i> <span>Espace ${sessionObj.name}</span>`;
+                            badge.classList.remove('hidden');
+                        }
+                    } catch(e){}
+                }
+            }
+        });
+    </script>
+</body>
+</html>

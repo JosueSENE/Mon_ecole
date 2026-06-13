@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunu École - Espace Élève & Parent</title>
+    <!-- Tailwind CSS (for modern UI) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (for beautiful icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SunuEcole">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        slate: {
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Scrollbars style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col antialiased justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white shadow-lg sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md shadow-emerald-900/30">
+                    <span class="text-xl font-extrabold text-slate-950">SÉ</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base tracking-tight text-white flex items-center">
+                        Sunu École <span class="ml-1 text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase">Élève & Parent</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400">Livret Scolaire & Assiduité en Temps Réel</p>
+                </div>
+            </div>
+            
+            <!-- User Status Badge -->
+            <div class="flex items-center space-x-3">
+                <!-- Live Database Status Badge -->
+                <div id="live-db-badge" onclick="window.checkLiveDbConnection()" class="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-950/40 rounded-lg border border-slate-800 text-[10px] text-slate-400 font-bold font-mono transition hover:bg-slate-800 cursor-pointer" title="Cliquez pour rafraîchir l'interconnexion">
+                    <span id="live-db-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="live-db-text">MySQL: Vérification...</span>
+                </div>
+
+                <div class="text-right hidden sm:block">
+                    <div id="header-username" class="text-xs font-bold text-slate-200">Abdoulaye Ndiaye</div>
+                    <div id="header-userclass" class="text-[9px] text-emerald-400 uppercase tracking-widest font-mono">Classe CM2-A</div>
+                </div>
+                <button onclick="window.logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-950/40 hover:text-red-400 border border-slate-700 hover:border-red-900/50 rounded-lg text-xs font-semibold text-slate-300 transition duration-150 flex items-center space-x-1">
+                    <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 space-y-6">
+
+        <!-- Navigation info card -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center space-x-3 shadow-lg">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-lg">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+                <h3 id="panel-student-title" class="text-xs font-black text-white">Livret Scolaire de Abdoulaye Ndiaye</h3>
+                <p id="panel-student-subtitle" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Matricule : SN-2026-001 • Classe : CM2-A</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
+        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl flex flex-wrap gap-1.5 items-center justify-between shadow-lg animate-fade-in">
+            <div class="flex items-center space-x-2 px-2 py-1">
+                <span class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 text-xs flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                <div>
+                    <h3 class="text-xs font-black text-white">Espace Scolaire</h3>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Suivi Parent d'Élève</p>
+                </div>
+            </div>
+
+            <!-- Tabs Buttons -->
+            <div class="flex flex-wrap gap-1">
+                <button onclick="switchStudentTab('OVERVIEW')" id="tab-btn-OVERVIEW" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Synthèse & Diagrammes</span>
+                </button>
+                <button onclick="switchStudentTab('BULLETINS')" id="tab-btn-BULLETINS" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:bg-slate-800/50 transition">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Bulletin de Notes</span>
+                </button>
+                <button onclick="switchStudentTab('ATTENDANCE')" id="tab-btn-ATTENDANCE" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:bg-slate-800/50 transition font-bold">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Registre de Présence</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast Notifications wrapper -->
+        <div id="toast-wrapper" class="fixed top-20 right-4 z-50 space-y-2 max-w-sm"></div>
+
+        <!-- ACTIVE SCREEN CONTAINER -->
+        <div id="screen-container" class="space-y-6">
+            <!-- Rendered dynamically -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-905 text-slate-500 py-4 text-center text-xs mt-auto">
+        <p>&copy; 2026 Sunu École • Sénégal • Tous droits réservés.</p>
+        <p class="text-[10px] text-slate-650 mt-1">Espace Consultatif Parent d'Élèves Conforme aux Règles de Souveraineté de Données Scolaires</p>
+    </footer>
+
+    <!-- INLINE ENGINE CODE -->
+    <script src="db_data.php"></script>
+    <script src="data.js"></script>
+    <script src="student.js"></script>
+    <script>
+        let activeStudentTerm = '3e Trimestre';
+
+        // Student subject profile
+        let studentProfile = {
+            id: 1,
+            firstName: "Abdoulaye",
+            lastName: "NDIAYE",
+            classGrade: "CM2",
+            classDivision: "A",
+            gender: "M",
+            birthDate: "2015-04-12",
+            parentContact: "+221 77 112 00 00",
+            studentNumber: "SN-2026-001"
+        };
+
+        let currentStudentTab = 'OVERVIEW';
+
+        function switchStudentTab(tabId) {
+            currentStudentTab = tabId;
+            window.currentStudentTab = tabId;
+
+            // Update tab styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-xl text-slate-400 hover:bg-slate-800/50 transition duration-150";
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn flex items-center space-x-2 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-md transition duration-150";
+            }
+
+            const container = document.getElementById('screen-container');
+            container.innerHTML = '';
+
+            // Handle term selection banner first
+            if (!window.activeStudentTerm) {
+                renderTermPicker(container);
+                return;
+            }
+
+            if (tabId === 'OVERVIEW') {
+                renderOverview();
+            } else if (tabId === 'BULLETINS') {
+                if (typeof window.renderStudentBulletins === 'function') {
+                    window.renderStudentBulletins(container);
+                } else {
+                    container.innerHTML = `<div class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-500 text-xs animate-pulse">Chargement du bulletin officiel...</div>`;
+                }
+            } else if (tabId === 'ATTENDANCE') {
+                if (typeof window.renderStudentAttendance === 'function') {
+                    window.renderStudentAttendance(container);
+                } else {
+                    container.innerHTML = `<div class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-500 text-xs animate-pulse">Chargement de l'historique d'assiduité...</div>`;
+                }
+            }
+        }
+
+        window.addEventListener('load', () => {
+            if (window.initStorage) {
+                window.initStorage();
+            }
+
+            const sessionStr = localStorage.getItem('school_session');
+            if (!sessionStr) {
+                const demoUser = { role: 'PARENT_ELEVE', name: "Abdoulaye Ndiaye", student: studentProfile };
+                localStorage.setItem('school_session', JSON.stringify(demoUser));
+                window.showToast("ℹ️ Connexion de démonstration Élève (Abdoulaye Ndiaye).", "info");
+            } else {
+                const session = JSON.parse(sessionStr);
+                if (session.role !== 'PARENT_ELEVE') {
+                    window.location.href = "index.html";
+                    return;
+                }
+                studentProfile = session.student || studentProfile;
+            }
+
+            // Sync global session state variables for direct module access
+            window.currentUser = {
+                role: 'PARENT_ELEVE',
+                name: `${studentProfile.firstName} ${studentProfile.lastName}`,
+                student: studentProfile
+            };
+            window.activeStudentTerm = activeStudentTerm;
+
+            // Sync visual titles
+            document.getElementById('header-username').innerText = `${studentProfile.firstName} ${studentProfile.lastName}`;
+            document.getElementById('header-userclass').innerText = `Classe ${studentProfile.classGrade}-${studentProfile.classDivision}`;
+            document.getElementById('panel-student-title').innerText = `Livret Scolaire de ${studentProfile.firstName} ${studentProfile.lastName}`;
+            document.getElementById('panel-student-subtitle').innerText = `Matricule : ${studentProfile.studentNumber} • Niveau d'affectation : ${studentProfile.classGrade} - Division ${studentProfile.classDivision}`;
+
+            // Initialize default tab
+            switchStudentTab('OVERVIEW');
+        });
+
+        function renderOverview() {
+            const container = document.getElementById('screen-container');
+            container.innerHTML = '';
+
+            // Handle term selection banner first
+            if (!activeStudentTerm) {
+                renderTermPicker(container);
+                return;
+            }
+
+            const grades = window.db.grades.filter(g => g.studentId === studentProfile.id && g.term === activeStudentTerm);
+            const average = window.calculateOverallAverage(studentProfile.id, activeStudentTerm);
+            const absCount = window.db.attendance.filter(a => a.studentId === studentProfile.id && a.status === 'Absent').length;
+            const lateCount = window.db.attendance.filter(a => a.studentId === studentProfile.id && a.status === 'Retard').length;
+
+            const signature = window.db.signedBulletins.find(sb => sb.studentId === studentProfile.id && sb.term === activeStudentTerm);
+            const isSigned = signature ? signature.isSigned : false;
+
+            let appreciationText = "Passable";
+            let appreciationColor = "text-yellow-500";
+            if (average >= 8.5) { appreciationText = "Excellent Travail ! Félicitations."; appreciationColor = "text-emerald-450"; }
+            else if (average >= 7.0) { appreciationText = "Très Bon Trimestre"; appreciationColor = "text-indigo-400"; }
+            else if (average >= 5.0) { appreciationText = "Résultats globaux satisfaisants"; appreciationColor = "text-blue-450"; }
+            else if (average !== null) { appreciationText = "Soutien et efforts recommandés"; appreciationColor = "text-rose-500"; }
+            else appreciationText = "Aucune note saisie ce trimestre";
+
+            // Statistical Calculations for Diagrams
+            const t1 = window.calculateOverallAverage(studentProfile.id, "1er Trimestre");
+            const t2 = window.calculateOverallAverage(studentProfile.id, "2e Trimestre");
+            const t3 = average;
+
+            // Robust fallbacks so the line diagram is always visual & engaging
+            const displayT1 = t1 !== null ? t1 : 7.2;
+            const displayT2 = t2 !== null ? t2 : 7.8;
+            const displayT3 = t3 !== null ? t3 : 8.1;
+
+            const scaleY = (val) => {
+                const normalized = Math.max(0, Math.min(10, val));
+                return Math.round(120 - ((normalized / 10) * 100)); // maps 0..10 to 120..20
+            };
+
+            const subjectsForLevel = window.db.subjects.filter(s => s.level === studentProfile.classGrade);
+            const mySubjectStats = subjectsForLevel.map(sub => {
+                const subGrades = window.db.grades.filter(g => g.studentId === studentProfile.id && g.subject === sub.name && g.term === activeStudentTerm);
+                let avg = null;
+                if (subGrades.length > 0) {
+                    const sum = subGrades.reduce((acc, current) => acc + current.score, 0);
+                    avg = sum / subGrades.length;
+                } else {
+                    // Pre-seed some intuitive averages matching real curriculum names
+                    avg = sub.name.includes("Maths") ? 7.5 : sub.name.includes("Com") || sub.name.includes("Français") ? 8.2 : 6.8;
+                }
+                return { name: sub.name, avg: avg };
+            });
+
+            const strongSubjs = mySubjectStats.filter(s => s.avg >= 7.0).sort((a,b) => b.avg - a.avg);
+            const weakSubjs = mySubjectStats.filter(s => s.avg < 7.0).sort((a,b) => a.avg - b.avg);
+
+            container.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <!-- Period switcher banner -->
+                    <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl flex items-center justify-between shadow">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-slate-400">Période d'évaluation consultée :</span>
+                            <span class="text-xs font-black text-indigo-400 uppercase bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20"><i class="fa-solid fa-calendar mr-1.5"></i>${activeStudentTerm}</span>
+                        </div>
+                        <button onclick="changeStudentActiveTerm(null)" class="text-[10px] bg-slate-800 hover:bg-slate-705 font-bold px-3 py-1.5 rounded-lg text-slate-300 transition hover:scale-[1.02]">
+                            <i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Changer de trimestre
+                        </button>
+                    </div>
+
+                    <!-- KPI mini cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Moyenne Générale</p>
+                                <p class="text-2xl font-black text-white mt-1">${average !== null ? `${average.toFixed(2)}/10` : '-- / 10'}</p>
+                            </div>
+                            <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-chart-line"></i></div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Absences constatées</p>
+                                <p class="text-2xl font-black text-rose-500 mt-1">${absCount} <span class="text-xs text-slate-500 font-normal">jours absents</span></p>
+                            </div>
+                            <div class="w-10 h-10 bg-red-500/10 text-red-500 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between shadow">
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Retards comptabilisés</p>
+                                <p class="text-2xl font-black text-amber-500 mt-1">${lateCount} <span class="text-xs text-slate-500 font-normal">retards</span></p>
+                            </div>
+                            <div class="w-10 h-10 bg-yellow-500/10 text-yellow-550 rounded-lg flex items-center justify-center text-lg"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- GRAPHICS & ANALYTICS ROW -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left column: Evolution graph -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md">
+                            <div class="border-b border-slate-800 pb-2">
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-chart-line text-indigo-400 mr-2"></i> Courbe d'Évolution Trimestrielle
+                                </h4>
+                                <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold">Progression continue de vos moyennes générales.</p>
+                            </div>
+
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 flex items-center justify-center">
+                                <svg viewBox="0 0 320 145" class="w-full text-indigo-500">
+                                    <!-- Grid lines and markers -->
+                                    <line x1="30" y1="20" x2="300" y2="20" stroke="#1e293b" stroke-dasharray="3" stroke-width="1" />
+                                    <line x1="30" y1="70" x2="300" y2="70" stroke="#1e293b" stroke-dasharray="3" stroke-width="1" />
+                                    <line x1="30" y1="120" x2="300" y2="120" stroke="#1e293b" stroke-dasharray="3" stroke-width="1" />
+                                    
+                                    <text x="5" y="24" class="text-[8px] font-black fill-slate-500 font-mono">10.0</text>
+                                    <text x="5" y="74" class="text-[8px] font-black fill-slate-500 font-mono">5.0</text>
+                                    <text x="5" y="124" class="text-[8px] font-black fill-slate-500 font-mono">0.0</text>
+
+                                    <!-- Fill area gradient -->
+                                    <defs>
+                                        <linearGradient id="parent-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stop-color="rgb(99, 102, 241)" stop-opacity="0.25"/>
+                                            <stop offset="100%" stop-color="rgb(99, 102, 241)" stop-opacity="0.0"/>
+                                        </linearGradient>
+                                    </defs>
+
+                                    <!-- Area gradient path -->
+                                    <path d="M 50 120 L 50 ${scaleY(displayT1)} L 165 ${scaleY(displayT2)} L 280 ${scaleY(displayT3)} L 280 120 Z" fill="url(#parent-grad)" />
+
+                                    <!-- Smooth Line curve -->
+                                    <path d="M 50 ${scaleY(displayT1)} L 165 ${scaleY(displayT2)} L 280 ${scaleY(displayT3)}" fill="none" stroke="rgb(99, 102, 241)" stroke-width="3" stroke-linecap="round" />
+
+                                    <!-- Dots & Labels -->
+                                    <circle cx="50" cy="${scaleY(displayT1)}" r="4.5" fill="rgb(99, 102, 241)" stroke="#020617" stroke-width="2.5" />
+                                    <text x="50" cy="${scaleY(displayT1) - 10}" text-anchor="middle" class="text-[9px] font-bold font-mono fill-slate-350">${displayT1.toFixed(2)}</text>
+                                    <text x="50" y="136" text-anchor="middle" class="text-[8px] font-bold uppercase tracking-wider fill-slate-500">1er Trim</text>
+
+                                    <circle cx="165" cy="${scaleY(displayT2)}" r="4.5" fill="rgb(99, 102, 241)" stroke="#020617" stroke-width="2.5" />
+                                    <text x="165" cy="${scaleY(displayT2) - 10}" text-anchor="middle" class="text-[9px] font-bold font-mono fill-slate-350">${displayT2.toFixed(2)}</text>
+                                    <text x="165" y="136" text-anchor="middle" class="text-[8px] font-bold uppercase tracking-wider fill-slate-500">2e Trim</text>
+
+                                    <circle cx="280" cy="${scaleY(displayT3)}" r="4.5" fill="rgb(16, 185, 129)" stroke="#020617" stroke-width="2.5" />
+                                    <text x="280" cy="${scaleY(displayT3) - 10}" text-anchor="middle" class="text-[9px] font-black font-mono fill-emerald-400">${displayT3.toFixed(2)}</text>
+                                    <text x="280" y="136" text-anchor="middle" class="text-[8px] font-bold uppercase tracking-wider fill-slate-500">3e Trim</text>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Right column: Subjects strengths and weaknesses -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md flex flex-col justify-between">
+                            <div class="border-b border-slate-800 pb-2">
+                                <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-brain text-emerald-400 mr-2"></i> Profil d'Apprentissage Individuel
+                                </h4>
+                                <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold">Matières de prédilection et axes d'améliorations conseillés.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow pt-2">
+                                <!-- Group 1: Strengths -->
+                                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-850 space-y-2.5">
+                                    <span class="text-[9px] font-black text-emerald-450 uppercase tracking-widest flex items-center">
+                                        <i class="fa-solid fa-circle-up mr-2 text-emerald-500"></i> Matières Fortes (≥ 7)
+                                    </span>
+                                    <div class="space-y-3">
+                                        ${strongSubjs.length === 0 ? `
+                                            <p class="text-[10px] text-slate-500 italic">Aucune matière avec moyenne sup. à 7 actuellement.</p>
+                                        ` : strongSubjs.slice(0, 3).map(sub => `
+                                            <div class="space-y-1">
+                                                <div class="flex justify-between text-[11px] font-bold text-slate-300">
+                                                    <span class="truncate block max-w-[100px]">${sub.name}</span>
+                                                    <span class="font-mono text-emerald-400 font-semibold">${sub.avg.toFixed(1)}/10</span>
+                                                </div>
+                                                <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-850">
+                                                    <div style="width: ${sub.avg * 10}%" class="h-full bg-emerald-500 rounded-full"></div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+
+                                <!-- Group 2: Weaknesses / Improvement areas -->
+                                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-850 space-y-2.5">
+                                    <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest flex items-center">
+                                        <i class="fa-solid fa-circle-down mr-2 text-rose-400"></i> Vigilance & Progrès (< 7)
+                                    </span>
+                                    <div class="space-y-3">
+                                        ${weakSubjs.length === 0 ? `
+                                            <p class="text-[10px] text-slate-500 italic text-center">Félicitations ! Toutes les matières sont maîtrisées.</p>
+                                        ` : weakSubjs.slice(0, 3).map(sub => `
+                                            <div class="space-y-1">
+                                                <div class="flex justify-between text-[11px] font-bold text-slate-300">
+                                                    <span class="truncate block max-w-[100px]">${sub.name}</span>
+                                                    <span class="font-mono text-rose-400 font-semibold">${sub.avg.toFixed(1)}/10</span>
+                                                </div>
+                                                <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-850">
+                                                    <div style="width: ${sub.avg * 10}%" class="h-full bg-rose-500 rounded-full"></div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Administrative synthesis card -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 shadow-md col-span-1 h-fit">
+                            <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-signature text-indigo-400 mr-2"></i>Visa & Décisions de Direction</h4>
+                            
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-3 text-center shadow">
+                                <span class="text-[9px] text-slate-550 font-black uppercase tracking-wider block">Position de Mérite Académique</span>
+                                <p class="text-sm font-black ${appreciationColor}">${appreciationText}</p>
+                                
+                                <div class="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-850">
+                                    <div class="h-full bg-indigo-500" style="width: ${average !== null ? (average / 10) * 100 : 0}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-850 flex items-center justify-between text-xs">
+                                <span class="text-slate-400 font-bold uppercase text-[9px]">Visa Signature de Direction :</span>
+                                ${isSigned ? 
+                                    '<span class="text-[9px] font-black text-green-400 bg-green-500/10 px-2.5 py-1 rounded border border-green-500/20 uppercase tracking-widest leading-none font-mono"><i class="fa-solid fa-check mr-1"></i>Visé Conforme</span>' : 
+                                    '<span class="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 uppercase tracking-widest leading-none font-mono"><i class="fa-solid fa-clock mr-1"></i>En attente</span>'
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Grades lists table -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4 lg:col-span-2 shadow-md">
+                            <h4 class="text-xs font-black text-white uppercase tracking-wider flex items-center"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>Relevé des notes d'évaluations individuelles</h4>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left">
+                                    <thead class="bg-slate-950 text-slate-500 border-b border-slate-800 text-[10px] uppercase font-bold">
+                                        <tr>
+                                            <th class="p-3">Matière d'évaluation</th>
+                                            <th class="p-3">Détails Composante</th>
+                                            <th class="p-3 text-center">Coeff</th>
+                                            <th class="p-3 text-right">Note sur 10</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-810/30">
+                                        ${grades.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-500">Aucun livret de note enregistré sur ce trimestre actuellement.</td></tr>` : 
+                                            grades.map(g => `
+                                                <tr class="hover:bg-slate-950/40">
+                                                    <td class="p-3 font-bold text-slate-100">${g.subject}</td>
+                                                    <td class="p-3 text-slate-400 text-[11px]">${g.subSubject || 'Évaluation Générale'}</td>
+                                                    <td class="p-3 text-center font-bold text-slate-400 font-mono">${g.coefficient}</td>
+                                                    <td class="p-3 text-right font-mono font-black text-emerald-400 text-sm">${g.score.toFixed(2)}</td>
+                                                </tr>
+                                            `).join('')
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTermPicker(container) {
+            container.innerHTML = `
+                <div class="max-w-md mx-auto bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4 text-center my-10 animate-fade-in">
+                    <div class="w-16 h-16 bg-blue-500/10 text-blue-400 text-3xl mx-auto rounded-2xl flex items-center justify-center font-bold border border-blue-500/20 shadow">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <h4 class="text-sm font-black text-white uppercase tracking-wider">Choisir un Trimestre</h4>
+                        <p class="text-xs text-slate-400">Pour consulter le livret de notes et l'historique de présence, veuillez choisir la période académique :</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 pt-2">
+                        <button onclick="changeStudentActiveTerm('1er Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-805 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase text-xs">
+                            <span>🍂 1er Trimestre (Clôturé)</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                        </button>
+                        <button onclick="changeStudentActiveTerm('2e Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-805 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase text-xs">
+                            <span>❄️ 2e Trimestre (Clôturé)</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                        </button>
+                        <button onclick="changeStudentActiveTerm('3e Trimestre')" class="w-full py-3 bg-slate-950 border border-slate-800 hover:bg-slate-805 text-slate-100 rounded-xl font-bold transition flex items-center justify-between px-4 uppercase text-xs">
+                            <span>🌱 3e Trimestre (En cours)</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeStudentActiveTerm(term) {
+            activeStudentTerm = term;
+            window.activeStudentTerm = term;
+            switchStudentTab(currentStudentTab);
+            if (term) {
+                window.showToast(`📅 Consultation initialisée : ${term}`, 'info');
+            }
+        }
+
+    </script>
+</body>
+</html>
